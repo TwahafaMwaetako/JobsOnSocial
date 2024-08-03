@@ -1,0 +1,489 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+<title>JobsOnSocial</title>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        font-family: 'Orbitron';
+        background-color: #000;
+        color: #0ff;
+        overflow: hidden;
+    }
+    .container {
+        display: flex;
+        height: 100vh;
+        position: relative;
+        z-index: 1;
+    }
+    .sidebar {
+        width: 250px;
+        background-color: rgba(0, 255, 255, 0.05);
+        padding: 20px;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(0, 255, 255, 0.2);
+    }
+    .main-content {
+        flex-grow: 1;
+        padding: 20px;
+        overflow-y: auto;
+    }
+    h1, h2 {
+        color: #0ff;
+        text-shadow: 0 0 10px #0ff;
+    }
+    .search-box {
+        background-color: rgba(0, 255, 255, 0.1);
+        border: 1px solid #0ff;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 20px;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+    .search-box input {
+        width: 100%;
+        background-color: transparent;
+        border: none;
+        color: #0ff;
+        font-size: 16px;
+        font-family: 'Orbitron', sans-serif;
+    }
+    .job-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    .job-card {
+        background-color: rgba(0, 255, 255, 0.05);
+        border: 1px solid #0ff;
+        padding: 15px;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    }
+    .job-card:hover {
+        background-color: rgba(0, 255, 255, 0.1);
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.7);
+        transform: scale(1.05) translateY(-5px);
+    }
+    .stats {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+    }
+    .stat-item {
+        text-align: center;
+        background-color: rgba(0, 255, 255, 0.05);
+        padding: 10px;
+        border-radius: 10px;
+        backdrop-filter: blur(5px);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    }
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+    }
+    #job-map {
+        height: 300px;
+        background-color: rgba(0, 255, 255, 0.05);
+        border: 1px solid #0ff;
+        margin-top: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    }
+    .platform-icons {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+    }
+    .platform-icon {
+        font-size: 24px;
+        color: #0ff;
+        transition: all 0.3s ease;
+    }
+    .platform-icon:hover {
+        transform: scale(1.2);
+        text-shadow: 0 0 20px #0ff;
+    }
+    #stars {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+    }
+    @keyframes pulse {
+        0% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.05); }
+        100% { opacity: 0.5; transform: scale(1); }
+    }
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+    
+    
+    .circular-progress {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: conic-gradient(#0ff 0deg, rgba(0, 255, 255, 0.1) 0deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .circular-progress::before {
+        content: "";
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #000;
+    }
+    .progress-value {
+        position: relative;
+        font-size: 20px;
+        font-weight: 600;
+        color: #0ff;
+    }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+</head>
+<body>
+    <canvas id="stars"></canvas>
+    <div class="container">
+        <div class="sidebar">
+            <h2>JobsOnSocial</h2>
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search jobs...">
+            </div>
+            <h3>Filters</h3>
+            <ul>
+                <li>
+                    <select id="location-filter">
+                        <option value="">All Locations</option>
+                        <option value="US">United States</option>
+                        <option value="UK">United Kingdom</option>
+                        <option value="CA">Canada</option>
+                    </select>
+                </li>
+                <li>
+                    <select id="job-type-filter">
+                        <option value="">All Job Types</option>
+                        <option value="full-time">Full-time</option>
+                        <option value="part-time">Part-time</option>
+                        <option value="contract">Contract</option>
+                    </select>
+                </li>
+            </ul>
+            <div class="platform-icons">
+                <i class="fab fa-linkedin platform-icon"></i>
+                <i class="fab fa-twitter platform-icon"></i>
+                <i class="fab fa-facebook platform-icon"></i>
+            </div>
+        </div>
+        <div class="main-content">
+            <h1>Discover Your Next Opportunity</h1>
+            <div class="job-list" id="job-list">
+                <!-- Job cards will be dynamically inserted here -->
+            </div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="circular-progress">
+                        <span class="progress-value" id="total-jobs">0</span>
+                    </div>
+                    <div>Total Jobs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="hexagon">
+                        <div class="hexagon-content">
+                            <div class="stat-value pulse" id="new-today">0</div>
+                            <div>New Today</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="circular-progress">
+                        <span class="progress-value" id="companies">0</span>
+                    </div>
+                    <div>Companies</div>
+                </div>
+            </div>
+            <div id="job-map"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+let jobs = [];
+const rapidApiKey = 'efa09dfc59mshf5049143d69c9b3p1da39cjsne3c074360858';
+const usaJobsApiKey = 'HSGABXgHI4c6hkfsm2ceLRskLyp2nL+GXe6tekw3KNc=';
+const theirStackApiKey = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjYxOmFmOjlhOmEzOjE0OjYzOjJlOjE5OmEwOjg1OmNjOmY3OjU2OmU4OjE0OjU2IiwidHlwIjoiSldUIn0.eyJhdWQiOltdLCJhenAiOiJhNGI4MTIwZTY2YmM0ZTc5ODUzMmQyMDk4NWZjY2ViOSIsImVtYWlsIjoiZGVnaWphNzA2NUBhbG1heGVuLmNvbSIsImV4cCI6MTcyMzQ4NDg1MSwiaWF0IjoxNzIyNjIwODUwLCJpc3MiOiJodHRwczovL2FjY291bnQudGhlaXJzdGFjay5jb20iLCJqdGkiOiIxMWY1OGM3MC0yZGE1LTRhNzMtYjU3ZS05MmNkOWQxMDRkMDAiLCJvcmdfY29kZSI6Im9yZ185MzQ5MTIxZTU1MSIsIm9yZ19uYW1lIjoiRGVmYXVsdCBPcmdhbml6YXRpb24iLCJwZXJtaXNzaW9ucyI6W10sInNjcCI6WyJvcGVuaWQiLCJwcm9maWxlIiwiZW1haWwiLCJvZmZsaW5lIl0sInN1YiI6ImtwXzQxM2RkNmYyMDI2MTQ1MTBhYTc1M2VjNjA1ZjUwNDE0In0.aapXLPT3x9PEq9SAlNKrv6_Y7oO90nS0RGKJ2RYBygM9LroLjiJ_pMMQrQ1V0jH0wdRNFUGzaaMB-2fhGHZ-h50A_x02KyQ_tavGStX6kq2A_8lHb9wJWQk7g-salK5SkXt6xgRbI73-YSsbQkLMTp6RY8goy21LM70J-XkI9N3hRJDOBMrl9DC-J0AvYeWLYed7zaM8FolEd5VSqaGu2-Brc9D-7a2YWrzPjbbJG8UEwa0Aji4RRITLWUa39aw4xDkZaii1wmHseSBNHtUhVkdNzx1TIZkPWEtkrGWJmGdZZ4Gril0vs3THB0mKkOSBLf1zSkm41OI2CfFQ-fA4XA';
+
+async function fetchRapidApiJobs(query = '') {
+    try {
+        const response = await axios.get('https://job-listings.p.rapidapi.com/api/job/details/', {
+            params: {
+                url: 'https://www.indeed.co.in/rc/clk?jk=8fd51fdef5282f41&fccid=a4e4e2eaf26690c9&vjs=3'
+            },
+            headers: {
+                'x-rapidapi-host': 'job-listings.p.rapidapi.com',
+                'x-rapidapi-key': rapidApiKey
+            }
+        });
+        return [{
+            title: response.data.title,
+            company: response.data.company,
+            location: response.data.location,
+            source: 'RapidAPI'
+        }];
+    } catch (error) {
+        console.error('Error fetching RapidAPI jobs:', error);
+        return [];
+    }
+}
+
+async function fetchUSAJobs(query = '') {
+    try {
+        const response = await axios.get('https://data.usajobs.gov/api/search', {
+            headers: {
+                "Host": 'data.usajobs.gov',
+                "User-Agent": 'your@email.address',
+                "Authorization-Key": usaJobsApiKey
+            },
+            params: {
+                Keyword: query
+            }
+        });
+        return response.data.SearchResult.SearchResultItems.map(item => ({
+            title: item.MatchedObjectDescriptor.PositionTitle,
+            company: item.MatchedObjectDescriptor.OrganizationName,
+            location: item.MatchedObjectDescriptor.PositionLocationDisplay,
+            source: 'USAJobs'
+        }));
+    } catch (error) {
+        console.error('Error fetching USAJobs:', error);
+        return [];
+    }
+}
+
+async function fetchTheirStackJobs(query = '') {
+    try {
+        const response = await axios.post('https://api.theirstack.com/v1/jobs/search', {
+            page: 0,
+            limit: 10,
+            posted_at_max_age_days: 15,
+            order_by: [
+                {
+                    desc: true,
+                    field: "date_posted"
+                }
+            ],
+            job_country_code_or: [
+                "NA"
+            ],
+            include_total_results: false,
+            blur_company_data: false,
+            search: query
+        }, {
+            headers: {
+                'Authorization': `Bearer ${theirStackApiKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        return response.data.results.map(job => ({
+            title: job.title,
+            company: job.company_name,
+            location: job.location,
+            source: 'TheirStack'
+        }));
+    } catch (error) {
+        console.error('Error fetching TheirStack jobs:', error);
+        return [];
+    }
+}
+
+async function fetchAllJobs(query = '') {
+    const [rapidApiJobs, usaJobs, theirStackJobs] = await Promise.all([
+        fetchRapidApiJobs(query),
+        fetchUSAJobs(query),
+        fetchTheirStackJobs(query)
+    ]);
+    jobs = [...rapidApiJobs, ...usaJobs, ...theirStackJobs];
+    createJobCards();
+    updateStats();
+}
+
+function createJobCards() {
+    const jobList = document.getElementById('job-list');
+    jobList.innerHTML = '';
+    jobs.forEach(job => {
+        const jobCard = document.createElement('div');
+        jobCard.className = 'job-card';
+        jobCard.innerHTML = `
+            <h3>${job.title}</h3>
+            <p>${job.company}</p>
+            <p>${job.location}</p>
+            <p>Source: ${job.source}</p>
+        `;
+        jobList.appendChild(jobCard);
+    });
+}
+
+function updateStats() {
+    document.getElementById('total-jobs').textContent = jobs.length;
+    document.getElementById('new-today').textContent = Math.floor(Math.random() * 50);
+    document.getElementById('companies').textContent = new Set(jobs.map(job => job.company)).size;
+}
+
+function filterJobs() {
+    const locationFilter = document.getElementById('location-filter').value;
+    const jobTypeFilter = document.getElementById('job-type-filter').value;
+
+    const filteredJobs = jobs.filter(job => {
+        const locationMatch = !locationFilter || job.location.includes(locationFilter);
+        const jobTypeMatch = !jobTypeFilter || job.title.toLowerCase().includes(jobTypeFilter);
+        return locationMatch && jobTypeMatch;
+    });
+
+    const jobList = document.getElementById('job-list');
+    jobList.innerHTML = '';
+    filteredJobs.forEach(job => {
+        const jobCard = document.createElement('div');
+        jobCard.className = 'job-card';
+        jobCard.innerHTML = `
+            <h3>${job.title}</h3>
+            <p>${job.company}</p>
+            <p>${job.location}</p>
+            <p>Source: ${job.source}</p>
+        `;
+        jobList.appendChild(jobCard);
+    });
+
+    updateStats();
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('search-input').addEventListener('input', debounce(() => {
+        const query = document.getElementById('search-input').value;
+        fetchAllJobs(query);
+    }, 300));
+
+    document.getElementById('location-filter').addEventListener('change', filterJobs);
+    document.getElementById('job-type-filter').addEventListener('change', filterJobs);
+
+    // Initialize the page
+    fetchAllJobs();
+});
+
+// Moving stars background
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let width, height;
+
+function resizeCanvas() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+const stars = [];
+for (let i = 0; i < 200; i++) {
+    stars.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        radius: Math.random() * 1.5,
+        vx: Math.floor(Math.random() * 50) - 25,
+        vy: Math.floor(Math.random() * 50) - 25
+    });
+}
+
+function draw() {
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#0ff';
+    for (let s of stars) {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.radius, 0, 2 * Math.PI);
+        ctx.fill();
+        s.x += s.vx / 30;
+        s.y += s.vy / 30;
+        if (s.x < 0 || s.x > width) s.vx = -s.vx;
+        if (s.y < 0 || s.y > height) s.vy = -s.vy;
+    }
+    requestAnimationFrame(draw);
+}
+
+draw();
+
+
+function createJobCards() {
+    const jobList = document.getElementById('job-list');
+    jobList.innerHTML = '';
+    jobs.forEach(job => {
+        const jobCard = document.createElement('div');
+        jobCard.className = 'job-card';
+        jobCard.innerHTML = `
+            <h3>${job.title}</h3>
+            <p>${job.company}</p>
+            <p>${job.location}</p>
+            <p>Source: ${job.source}</p>
+        `;
+        
+        // Add click event listener to the job card
+        jobCard.addEventListener('click', () => {
+            let url;
+            switch(job.source) {
+                case 'RapidAPI':
+                    // For RapidAPI jobs, we'll use the original URL we have
+                    url = 'https://www.indeed.co.in/rc/clk?jk=8fd51fdef5282f41&fccid=a4e4e2eaf26690c9&vjs=3';
+                    break;
+                case 'USAJobs':
+                    // For USAJobs, we'll construct a search URL
+                    url = `https://www.usajobs.gov/Search/Results?k=${encodeURIComponent(job.title)}`;
+                    break;
+                case 'TheirStack':
+                    // For TheirStack, we'll direct to their main job search page
+                    url = 'https://theirstack.com/jobs';
+                    break;
+                default:
+                    // If we don't have a specific URL, we'll do a Google search for the job
+                    url = `https://www.google.com/search?q=${encodeURIComponent(`${job.title} ${job.company} job`)}`;
+            }
+            window.open(url, '_blank');
+        });
+
+        // Change cursor to pointer on hover
+        jobCard.style.cursor = 'pointer';
+
+        jobList.appendChild(jobCard);
+    });
+}
+
+    </script>
+</body>
+</html>
