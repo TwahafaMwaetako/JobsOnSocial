@@ -21,11 +21,60 @@
     }
     .sidebar {
         width: 250px;
-        background-color: rgba(0, 255, 255, 0.05);
+        background-color: #000000;
         padding: 20px;
-        box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-        backdrop-filter: blur(10px);
-        border-right: 1px solid rgba(0, 255, 255, 0.2);
+        color: #00FFFF;
+        font-family: 'Orbitron', sans-serif;
+    }
+
+    .sidebar h2 {
+        color: #00FFFF;
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .filter-group {
+        margin-bottom: 15px;
+        position: relative;
+    }
+
+    .filter-group::before {
+        content: '•';
+        position: absolute;
+        left: -15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #00FFFF;
+        font-size: 20px;
+    }
+
+    .cyberpunk-select {
+        width: 100%;
+        padding: 5px;
+        background-color: #000000;
+        border: 1px solid #00FFFF;
+        color: #00FFFF;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 14px;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+    }
+
+    .cyberpunk-select:focus {
+        outline: none;
+        box-shadow: 0 0 5px #00FFFF;
+    }
+
+    .platform-icons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+    }
+
+    .platform-icon {
+        color: #00FFFF;
+        font-size: 24px;
     }
     .main-content {
         flex-grow: 1;
